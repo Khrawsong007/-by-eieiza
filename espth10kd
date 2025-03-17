@@ -1,0 +1,393 @@
+-- Roblox ESP Script with GUI Toggle
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- eieiza
+-- ESP Configuration
+local ESP = {
+    Enabled = false,
+    TeamCheck = false,
+    BoxesEnabled = true,
+    NamesEnabled = true,
+    DistanceEnabled = true,
+    TracersEnabled = true,
+    BoxColor = Color3.fromRGB(0, 255, 0),
+    TextColor = Color3.fromRGB(255, 255, 255),
+    TracerColor = Color3.fromRGB(0, 255, 0),
+    BoxThickness = 2,
+    TextSize = 14,
+    MaxDistance = 10000,
+    HighlightTarget = true
+}
+
+-- Create GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ESP_Control"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Use Protected GUI method if available (for exploit compatibility)
+local success, err = pcall(function()
+    ScreenGui.Parent = game:GetService("CoreGui")
+end)
+
+if not success then
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- Main Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 220, 0, 180)
+MainFrame.Position = UDim2.new(0.8, 0, 0.5, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+-- Title
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, 0, 1, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "โปรมอง By eieiza [Ai]"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
+Title.Font = Enum.Font.SourceSansBold
+Title.Parent = TitleBar
+
+-- Main Toggle Button
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(0.8, 0, 0, 30)
+ToggleButton.Position = UDim2.new(0.1, 0, 0.2, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Text = "เปิดมอง: เปิด"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 16
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Parent = MainFrame
+
+-- Feature Toggles
+local BoxToggle = Instance.new("TextButton")
+BoxToggle.Name = "BoxToggle"
+BoxToggle.Size = UDim2.new(0.4, 0, 0, 25)
+BoxToggle.Position = UDim2.new(0.07, 0, 0.4, 0)
+BoxToggle.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+BoxToggle.BorderSizePixel = 0
+BoxToggle.Text = "กรอบผู้เล่น: เปิด"
+BoxToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+BoxToggle.TextSize = 14
+BoxToggle.Font = Enum.Font.SourceSans
+BoxToggle.Parent = MainFrame
+
+local NameToggle = Instance.new("TextButton")
+NameToggle.Name = "NameToggle"
+NameToggle.Size = UDim2.new(0.4, 0, 0, 25)
+NameToggle.Position = UDim2.new(0.53, 0, 0.4, 0)
+NameToggle.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+NameToggle.BorderSizePixel = 0
+NameToggle.Text = "ชื่อ: เปิด"
+NameToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+NameToggle.TextSize = 14
+NameToggle.Font = Enum.Font.SourceSans
+NameToggle.Parent = MainFrame
+
+local TracerToggle = Instance.new("TextButton")
+TracerToggle.Name = "TracerToggle"
+TracerToggle.Size = UDim2.new(0.4, 0, 0, 25)
+TracerToggle.Position = UDim2.new(0.07, 0, 0.55, 0)
+TracerToggle.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+TracerToggle.BorderSizePixel = 0
+TracerToggle.Text = "เส้นระยะ: เปิด"
+TracerToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+TracerToggle.TextSize = 14
+TracerToggle.Font = Enum.Font.SourceSans
+TracerToggle.Parent = MainFrame
+
+local DistanceToggle = Instance.new("TextButton")
+DistanceToggle.Name = "DistanceToggle"
+DistanceToggle.Size = UDim2.new(0.4, 0, 0, 25)
+DistanceToggle.Position = UDim2.new(0.53, 0, 0.55, 0)
+DistanceToggle.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+DistanceToggle.BorderSizePixel = 0
+DistanceToggle.Text = "ระยะ: เปิด"
+DistanceToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+DistanceToggle.TextSize = 14
+DistanceToggle.Font = Enum.Font.SourceSans
+DistanceToggle.Parent = MainFrame
+
+local TeamCheckToggle = Instance.new("TextButton")
+TeamCheckToggle.Name = "TeamCheckToggle"
+TeamCheckToggle.Size = UDim2.new(0.8, 0, 0, 25)
+TeamCheckToggle.Position = UDim2.new(0.1, 0, 0.7, 0)
+TeamCheckToggle.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+TeamCheckToggle.BorderSizePixel = 0
+TeamCheckToggle.Text = "เช็คทีม: ปิด"
+TeamCheckToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+TeamCheckToggle.TextSize = 14
+TeamCheckToggle.Font = Enum.Font.SourceSans
+TeamCheckToggle.Parent = MainFrame
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Name = "StatusLabel"
+StatusLabel.Size = UDim2.new(0.8, 0, 0, 20)
+StatusLabel.Position = UDim2.new(0.1, 0, 0.85, 0)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "สถานะ: พร้อม"
+StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+StatusLabel.TextSize = 14
+StatusLabel.Font = Enum.Font.SourceSans
+StatusLabel.Parent = MainFrame
+
+-- ESP Drawing
+local DrawingObjects = {}
+
+local function CreateDrawings(player)
+    if player == LocalPlayer then return end
+    
+    local drawings = {}
+    
+    -- Box
+    drawings.Box = Drawing.new("Square")
+    drawings.Box.Thickness = ESP.BoxThickness
+    drawings.Box.Color = ESP.BoxColor
+    drawings.Box.Filled = false
+    drawings.Box.Transparency = 1
+    drawings.Box.Visible = false
+    
+    -- Name
+    drawings.Name = Drawing.new("Text")
+    drawings.Name.Size = ESP.TextSize
+    drawings.Name.Color = ESP.TextColor
+    drawings.Name.Center = true
+    drawings.Name.Outline = true
+    drawings.Name.Visible = false
+    
+    -- Distance
+    drawings.Distance = Drawing.new("Text")
+    drawings.Distance.Size = ESP.TextSize
+    drawings.Distance.Color = ESP.TextColor
+    drawings.Distance.Center = true
+    drawings.Distance.Outline = true
+    drawings.Distance.Visible = false
+    
+    -- Tracer
+    drawings.Tracer = Drawing.new("Line")
+    drawings.Tracer.Thickness = 1.5
+    drawings.Tracer.Color = ESP.TracerColor
+    drawings.Tracer.Transparency = 1
+    drawings.Tracer.Visible = false
+    
+    DrawingObjects[player] = drawings
+    return drawings
+end
+
+local function RemoveDrawings(player)
+    local drawings = DrawingObjects[player]
+    if drawings then
+        for _, drawing in pairs(drawings) do
+            if drawing and drawing.Remove then
+                drawing:Remove()
+            end
+        end
+        DrawingObjects[player] = nil
+    end
+end
+
+-- Team Check Function
+local function IsTeamMate(player)
+    if not ESP.TeamCheck then return false end
+    if player.Team and LocalPlayer.Team then
+        return player.Team == LocalPlayer.Team
+    end
+    return false
+end
+
+-- Update ESP Function
+local function UpdateESP()
+    for player, drawings in pairs(DrawingObjects) do
+        if not player or not player.Parent or not player:IsA("Player") then
+            RemoveDrawings(player)
+            continue
+        end
+        
+        local character = player.Character
+        local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+        local head = character and character:FindFirstChild("Head")
+        local humanoid = character and character:FindFirstChild("Humanoid")
+        
+        if not rootPart or not head or not humanoid or humanoid.Health <= 0 then
+            for _, drawing in pairs(drawings) do
+                drawing.Visible = false
+            end
+            continue
+        end
+        
+        local rootPos = rootPart.Position
+        local distance = (Camera.CFrame.Position - rootPos).Magnitude
+        
+        if distance > ESP.MaxDistance then
+            for _, drawing in pairs(drawings) do
+                drawing.Visible = false
+            end
+            continue
+        end
+        
+        local screenPos, onScreen = Camera:WorldToViewportPoint(rootPos)
+        
+        if not onScreen then
+            for _, drawing in pairs(drawings) do
+                drawing.Visible = false
+            end
+            continue
+        end
+        
+        -- Check ESP enabled and team check
+        local shouldShow = ESP.Enabled and (not IsTeamMate(player))
+        
+        -- Calculate Box Size based on distance
+        local scaleFactor = 1 / (distance * 0.05)
+        local size = math.clamp(scaleFactor * 10, 2, 5)
+        local boxSize = Vector2.new(size * 10, size * 15)
+        
+        -- Update Box
+        drawings.Box.Visible = shouldShow and ESP.BoxesEnabled
+        if drawings.Box.Visible then
+            drawings.Box.Size = boxSize
+            drawings.Box.Position = Vector2.new(screenPos.X - boxSize.X / 2, screenPos.Y - boxSize.Y / 2)
+            drawings.Box.Color = ESP.BoxColor
+        end
+        
+        -- Update Name
+        drawings.Name.Visible = shouldShow and ESP.NamesEnabled
+        if drawings.Name.Visible then
+            drawings.Name.Position = Vector2.new(screenPos.X, screenPos.Y - boxSize.Y / 2 - drawings.Name.TextBounds.Y - 2)
+            drawings.Name.Text = player.Name
+            drawings.Name.Color = ESP.TextColor
+        end
+        
+        -- Update Distance
+        drawings.Distance.Visible = shouldShow and ESP.DistanceEnabled
+        if drawings.Distance.Visible then
+            drawings.Distance.Position = Vector2.new(screenPos.X, screenPos.Y + boxSize.Y / 2 + 2)
+            drawings.Distance.Text = math.floor(distance) .. " studs"
+            drawings.Distance.Color = ESP.TextColor
+        end
+        
+        -- Update Tracer
+        drawings.Tracer.Visible = shouldShow and ESP.TracersEnabled
+        if drawings.Tracer.Visible then
+            drawings.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+            drawings.Tracer.To = Vector2.new(screenPos.X, screenPos.Y)
+            drawings.Tracer.Color = ESP.TracerColor
+        end
+    end
+end
+
+-- Button Click Functions
+ToggleButton.MouseButton1Click:Connect(function()
+    ESP.Enabled = not ESP.Enabled
+    ToggleButton.Text = "โปรมอง: " .. (ESP.Enabled and "เปิด" or "ปิด")
+    ToggleButton.BackgroundColor3 = ESP.Enabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    StatusLabel.Text = "สถานะ: โปรมอง " .. (ESP.Enabled and "เปิดอยู่" or "ปิดอยู่")
+end)
+
+BoxToggle.MouseButton1Click:Connect(function()
+    ESP.BoxesEnabled = not ESP.BoxesEnabled
+    BoxToggle.Text = "กรอบผู้เล่น: " .. (ESP.BoxesEnabled and "เปิด" or "ปิด")
+    BoxToggle.BackgroundColor3 = ESP.BoxesEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+end)
+
+NameToggle.MouseButton1Click:Connect(function()
+    ESP.NamesEnabled = not ESP.NamesEnabled
+    NameToggle.Text = "ชื่อ: " .. (ESP.NamesEnabled and "เปิด" or "ปิด")
+    NameToggle.BackgroundColor3 = ESP.NamesEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+end)
+
+TracerToggle.MouseButton1Click:Connect(function()
+    ESP.TracersEnabled = not ESP.TracersEnabled
+    TracerToggle.Text = "เส้นระยะ: " .. (ESP.TracersEnabled and "เปิด" or "ปิด")
+    TracerToggle.BackgroundColor3 = ESP.TracersEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+end)
+
+DistanceToggle.MouseButton1Click:Connect(function()
+    ESP.DistanceEnabled = not ESP.DistanceEnabled
+    DistanceToggle.Text = "ระยะ: " .. (ESP.DistanceEnabled and "เปิด" or "ปิด")
+    DistanceToggle.BackgroundColor3 = ESP.DistanceEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+end)
+
+TeamCheckToggle.MouseButton1Click:Connect(function()
+    ESP.TeamCheck = not ESP.TeamCheck
+    TeamCheckToggle.Text = "เช็คทีม: " .. (ESP.TeamCheck and "เปิด" or "ปิด")
+    TeamCheckToggle.BackgroundColor3 = ESP.TeamCheck and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    StatusLabel.Text = "สถานะ: เช็คทีม " .. (ESP.TeamCheck and "เปิดอยู่" or "ปิดอยู่")
+end)
+
+-- Initialize drawings for existing players
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        CreateDrawings(player)
+    end
+end
+
+-- Handle player joins
+Players.PlayerAdded:Connect(function(player)
+    CreateDrawings(player)
+end)
+
+-- Handle player leaves
+Players.PlayerRemoving:Connect(function(player)
+    RemoveDrawings(player)
+end)
+
+-- Main Update Loop
+RunService:BindToRenderStep("ESP", 1, function()
+    UpdateESP()
+end)
+
+-- Notification
+local Notification = Instance.new("Frame")
+Notification.Name = "Notification"
+Notification.Size = UDim2.new(0, 250, 0, 40)
+Notification.Position = UDim2.new(0.5, -125, 0.85, 0)
+Notification.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Notification.BackgroundTransparency = 0.2
+Notification.BorderSizePixel = 2
+Notification.BorderColor3 = Color3.fromRGB(0, 170, 255)
+Notification.Parent = ScreenGui
+
+local NotificationText = Instance.new("TextLabel")
+NotificationText.Name = "NotificationText"
+NotificationText.Size = UDim2.new(1, 0, 1, 0)
+NotificationText.BackgroundTransparency = 1
+NotificationText.Text = "รันสคริปเสร็จสิ้น eieiza"
+NotificationText.TextColor3 = Color3.fromRGB(255, 255, 255)
+NotificationText.TextSize = 16
+NotificationText.Font = Enum.Font.SourceSansBold
+NotificationText.Parent = Notification
+
+-- Fade out notification
+spawn(function()
+    wait(3)
+    for i = 1, 10 do
+        Notification.BackgroundTransparency = 0.2 + (i * 0.08)
+        NotificationText.TextTransparency = i * 0.1
+        wait(0.1)
+    end
+    Notification:Destroy()
+end)
+
+-- Script protection
+getgenv().ESP_LOADED = true
