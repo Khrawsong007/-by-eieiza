@@ -1,0 +1,93 @@
+-- Night Vision Script for Roblox
+-- สคริปมองเห็นในความมืด สามารถเปิด/ปิดได้
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+
+local player = Players.LocalPlayer
+local nightVisionEnabled = false
+local originalBrightness
+local originalAmbient
+local originalOutdoorAmbient
+local originalFogEnd
+
+-- บันทึกค่าเริ่มต้นของแสง
+originalBrightness = Lighting.Brightness
+originalAmbient = Lighting.Ambient
+originalOutdoorAmbient = Lighting.OutdoorAmbient
+originalFogEnd = Lighting.FogEnd
+
+-- ฟังก์ชันสำหรับเปิดระบบมองกลางคืน
+local function enableNightVision()
+    nightVisionEnabled = true
+    
+    -- เปลี่ยนการตั้งค่าแสงเพื่อให้มองเห็นได้ในความมืด
+    Lighting.Brightness = 1
+    Lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
+    Lighting.OutdoorAmbient = Color3.new(0.5, 0.5, 0.5)
+    Lighting.FogEnd = 1000
+    
+    -- สร้างเอฟเฟกต์สีเขียวสำหรับระบบมองกลางคืน
+    local colorCorrection = Instance.new("ColorCorrectionEffect")
+    colorCorrection.Name = "NightVisionEffect"
+    colorCorrection.TintColor = Color3.new(0.7, 1, 0.7) -- สีเขียวอ่อน
+    colorCorrection.Saturation = -0.2
+    colorCorrection.Contrast = 0.1
+    colorCorrection.Brightness = 0.1
+    colorCorrection.Parent = Lighting
+    
+    -- แจ้งผู้เล่นว่าระบบมองกลางคืนเปิดใช้งานแล้ว
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "Night Vision",
+        Text = "เปิดใช้งานระบบมองกลางคืนแล้ว",
+        Duration = 3
+    })
+end
+
+-- ฟังก์ชันสำหรับปิดระบบมองกลางคืน
+local function disableNightVision()
+    nightVisionEnabled = false
+    
+    -- คืนค่าการตั้งค่าแสงเป็นค่าเริ่มต้น
+    Lighting.Brightness = originalBrightness
+    Lighting.Ambient = originalAmbient
+    Lighting.OutdoorAmbient = originalOutdoorAmbient
+    Lighting.FogEnd = originalFogEnd
+    
+    -- ลบเอฟเฟกต์สีเขียว
+    local effect = Lighting:FindFirstChild("NightVisionEffect")
+    if effect then
+        effect:Destroy()
+    end
+    
+    -- แจ้งผู้เล่นว่าระบบมองกลางคืนปิดใช้งานแล้ว
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "Night Vision",
+        Text = "ปิดใช้งานระบบมองกลางคืนแล้ว",
+        Duration = 3
+    })
+end
+
+-- ฟังก์ชันสำหรับสลับระหว่างเปิดและปิดระบบมองกลางคืน
+local function toggleNightVision()
+    if nightVisionEnabled then
+        disableNightVision()
+    else
+        enableNightVision()
+    end
+end
+
+-- ตรวจสอบการกดปุ่ม 'N' เพื่อเปิด/ปิดระบบมองกลางคืน
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.N then
+        toggleNightVision()
+    end
+end)
+
+-- คำแนะนำการใช้งาน
+game.StarterGui:SetCore("SendNotification", {
+    Title = "Night Vision Script",
+    Text = "กด 'N' เพื่อเปิด/ปิดระบบมองกลางคืน",
+    Duration = 5
+})
